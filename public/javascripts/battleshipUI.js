@@ -93,16 +93,11 @@ BattleshipUI.prototype.renderResponse = function (data) {
 
   tile.addClass(data.response);
   tile.removeClass("untouched");
-  console.log(tile);
-  console.log(data);
-
 };
 
 BattleshipUI.prototype.changeState = function (data) {
   console.log(data.state);
-
   $(".status").html(data.state);
-
   this.bs.state = data.state;
 }
 
@@ -116,7 +111,6 @@ BattleshipUI.prototype.createGrids = function () {
 
     for (var j = 0; j < 10; j++) {
       var $tile = $("<div class='tile untouched' data-row='" + i + "' data-col='" + j + "'></div>");
-
       myShips[i].push($tile.clone());
       myShots[i].push($tile.clone());
     }
