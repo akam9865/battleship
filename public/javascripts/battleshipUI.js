@@ -19,18 +19,18 @@ window.BattleshipUI = BattleshipUI = function ($root, bs, socket) {
   $('.myShips .tile').on('click', this.handlePlace.bind(this));
   $('.myShots .tile').on('click', this.handleShot.bind(this));
 
-  $('#submit').on('click', this.sendMessage.bind(this));
+  $('.message-form').on('submit', this.sendMessage.bind(this));
 };
 
 BattleshipUI.prototype.displayMessage = function (data) {
-
   console.log(data.id + " said: " + data.message);
   var $li = $("<li>").html(data.id + " said: " + data.message);
 
   $("ul").append($li);
 }
 
-BattleshipUI.prototype.sendMessage = function () {
+BattleshipUI.prototype.sendMessage = function (event) {
+	event.preventDefault();
   var message = $("#message").val();
   $("#message").val("");
   this.socket.emit("MESSAGE", {message: message, id: this.socket.id});
