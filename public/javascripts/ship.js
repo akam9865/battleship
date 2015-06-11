@@ -1,7 +1,7 @@
-window.Ship = Ship = function (options) {
-  this.length = options.length;
-  this.front = options.front;
-  this.back = options.back;
+window.Ship = Ship = function (front, back) {
+  // this.length = options.length;
+  this.front = front;
+  this.back = back;
   this.segments = this.createSegments();
 };
 

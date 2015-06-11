@@ -1,24 +1,24 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-
-
 window.Battleship = Battleship = function () {
   this.shipsToPlace = [2, 3, 3, 4, 5];
   this.ships = [];
   this.taken = [];
-  this.state = GameStates.WAITING_FOR_OPPONENT;
+  this.state = "WAITING_FOR_OPPONENT";
 };
 
-Battleship.prototype.createShips = function () {
-  var ships = [2, 3, 3, 4, 5];
-
-  for (var i = 0; i < 5; i++) {
-    ships[i] = new Ship({ length: ships[i] });
-  };
-  return ships;
-};
+// Battleship.prototype.createShips = function () {
+//   var ships = [2, 3, 3, 4, 5];
+//
+//   for (var i = 0; i < 5; i++) {
+//     ships[i] = new Ship({ length: ships[i] });
+//   };
+//
+//   return ships;
+// };
 
 Battleship.prototype.notTaken = function (segments) {
   var conflict = false;
+	
   this.taken.forEach(function(takenSeg){
     segments.forEach(function(shipSeg){
       if (takenSeg[0] === shipSeg[0] && takenSeg[1] === shipSeg[1]) {
@@ -26,24 +26,23 @@ Battleship.prototype.notTaken = function (segments) {
       }
     });
   });
+	
   return !conflict;
 };
 
-Battleship.prototype.placeShip = function (options) {
-  var front = options.front;
-  var back = options.back;
+Battleship.prototype.placeShip = function (front, back) {
   var length;
   var segments = [];
 
   if (front[0] === back[0] || front[1] === back[1]) {
     length = Math.abs(front[0] - back[0] + front[1] - back[1]) + 1;
-    options["length"] = length;
   }
 
   var index = this.shipsToPlace.indexOf(length);
 
   if (index > -1) {
-    var ship = new Ship (options);
+    var ship = new Ship (front, back);
+		
     if (this.notTaken(ship.segments)) {
       this.ships.push(ship);
       this.shipsToPlace.splice(index, 1);
@@ -62,6 +61,7 @@ Battleship.prototype.placeShip = function (options) {
 Battleship.prototype.checkShot = function (coords) {
   var hit = false;
   var gameOver = true;
+	
   this.ships.forEach(function (ship) {
     ship.segments.forEach(function (segment) {
       if (segment[0] === coords.row && segment[1] === coords.col) {
@@ -73,13 +73,46 @@ Battleship.prototype.checkShot = function (coords) {
     if (!ship.checkSunk()) {
       gameOver = false
     }
-  })
+  });
 
-  return {
-    hit: hit,
-    gameOver: gameOver
-    };
-}
+  return { hit: hit, gameOver: gameOver };
+};
+
+// window.ComputerBattleship = ComputerBattleship = function () {
+// 	Battleship.call(this);
+// };
+//
+// ComputerBattleship.prototype = {
+// 	placeShips: function () {
+// 		var i = 0;
+//
+// 		while (this.shipsToPlace.length > 0) {
+// 			var len  = this.shipsToPlace.pop();
+// 			var ship = new Ship([0, i], [len - 1, i]);
+// 			this.ships.push(ship);
+// 			i++
+// 		}
+// 	}
+// };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 },{}],2:[function(require,module,exports){
 window.BattleshipUI = BattleshipUI = function ($root, bs, socket) {
@@ -92,7 +125,7 @@ window.BattleshipUI = BattleshipUI = function ($root, bs, socket) {
   this.render();
   this.socket = socket;
 
-
+	
   socket.on('CHANGE_STATE', this.changeState.bind(this));
   socket.on('SHOT', this.checkShot.bind(this));
   socket.on('RESPONSE', this.renderResponse.bind(this));
@@ -136,7 +169,8 @@ BattleshipUI.prototype.checkShot = function (data) {
     this.shakeBoard($(".myShips"));
 
     if (result.gameOver) {
-      this.socket.emit("GAME_OVER", {winner: "me"});
+			console.log("client side over")
+      this.socket.emit("GAME_OVER", { winner: "me" });
     }
   } else {
     this.socket.emit("MISS", data);
@@ -182,8 +216,21 @@ BattleshipUI.prototype.renderResponse = function (data) {
 BattleshipUI.prototype.changeState = function (data) {
   console.log(data.state);
   $(".status").html(data.state);
+	var socket = this.socket;
+
+	if (data.state === "WAITING_FOR_OPPONENT") {
+		var $playAI = $("<button id='AI'>play computer</button>");
+		$(".status").append($playAI);
+		
+		$playAI.on('click', function () {
+			console.log("ai game");
+
+			socket.emit("PLAY_COMPUTER", {});
+		});
+	}
+	
   this.bs.state = data.state;
-}
+};
 
 BattleshipUI.prototype.createGrids = function () {
   var myShips = []
@@ -201,7 +248,7 @@ BattleshipUI.prototype.createGrids = function () {
   }
 
   return [myShips, myShots];
-}
+};
 
 BattleshipUI.prototype.render = function () {
   var $myShips = $('.myShips');
@@ -253,7 +300,8 @@ BattleshipUI.prototype.handlePlace = function (e) {
       this.click2 = [$(e.target).data('row'), $(e.target).data('col')];
       this.$firstClicked.removeClass('selected');
 
-      var segments = this.bs.placeShip({front: this.click1, back: this.click2});
+      var segments = this.bs.placeShip(this.click1, this.click2);
+			
       segments.forEach(function (segment) {
         var row = segment[0];
         var col = segment[1];
@@ -269,8 +317,8 @@ BattleshipUI.prototype.handlePlace = function (e) {
       $(".tile").off("mouseover");
       this.click1 = undefined;
       this.renderAvailable();
-
     }
+		
     if (this.bs.shipsToPlace.length === 0) {
       this.socket.emit('SHIPS_PLACED');
     }
@@ -303,12 +351,10 @@ BattleshipUI.prototype.handleShot = function (e) {
       height: 0,
       left: "10px",
       top: "10px"
-    }, 750, function(){
+    }, 750, function () {
       this.remove();
       that.socket.emit("SHOT", {col: col, row: row});
     });
-
-    // this.socket.emit("SHOT", {col: col, row: row});
   }
 };
 
@@ -346,10 +392,10 @@ GameStates = {
 };
 
 },{}],4:[function(require,module,exports){
-window.Ship = Ship = function (options) {
-  this.length = options.length;
-  this.front = options.front;
-  this.back = options.back;
+window.Ship = Ship = function (front, back) {
+  // this.length = options.length;
+  this.front = front;
+  this.back = back;
   this.segments = this.createSegments();
 };
 

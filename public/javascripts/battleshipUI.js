@@ -8,7 +8,7 @@ window.BattleshipUI = BattleshipUI = function ($root, bs, socket) {
   this.render();
   this.socket = socket;
 
-
+	
   socket.on('CHANGE_STATE', this.changeState.bind(this));
   socket.on('SHOT', this.checkShot.bind(this));
   socket.on('RESPONSE', this.renderResponse.bind(this));
@@ -52,7 +52,8 @@ BattleshipUI.prototype.checkShot = function (data) {
     this.shakeBoard($(".myShips"));
 
     if (result.gameOver) {
-      this.socket.emit("GAME_OVER", {winner: "me"});
+			console.log("client side over")
+      this.socket.emit("GAME_OVER", { winner: "me" });
     }
   } else {
     this.socket.emit("MISS", data);
@@ -98,8 +99,21 @@ BattleshipUI.prototype.renderResponse = function (data) {
 BattleshipUI.prototype.changeState = function (data) {
   console.log(data.state);
   $(".status").html(data.state);
+	var socket = this.socket;
+
+	if (data.state === "WAITING_FOR_OPPONENT") {
+		var $playAI = $("<button id='AI'>play computer</button>");
+		$(".status").append($playAI);
+		
+		$playAI.on('click', function () {
+			console.log("ai game");
+
+			socket.emit("PLAY_COMPUTER", {});
+		});
+	}
+	
   this.bs.state = data.state;
-}
+};
 
 BattleshipUI.prototype.createGrids = function () {
   var myShips = []
@@ -117,7 +131,7 @@ BattleshipUI.prototype.createGrids = function () {
   }
 
   return [myShips, myShots];
-}
+};
 
 BattleshipUI.prototype.render = function () {
   var $myShips = $('.myShips');
@@ -169,7 +183,8 @@ BattleshipUI.prototype.handlePlace = function (e) {
       this.click2 = [$(e.target).data('row'), $(e.target).data('col')];
       this.$firstClicked.removeClass('selected');
 
-      var segments = this.bs.placeShip({front: this.click1, back: this.click2});
+      var segments = this.bs.placeShip(this.click1, this.click2);
+			
       segments.forEach(function (segment) {
         var row = segment[0];
         var col = segment[1];
@@ -185,8 +200,8 @@ BattleshipUI.prototype.handlePlace = function (e) {
       $(".tile").off("mouseover");
       this.click1 = undefined;
       this.renderAvailable();
-
     }
+		
     if (this.bs.shipsToPlace.length === 0) {
       this.socket.emit('SHIPS_PLACED');
     }
@@ -219,12 +234,10 @@ BattleshipUI.prototype.handleShot = function (e) {
       height: 0,
       left: "10px",
       top: "10px"
-    }, 750, function(){
+    }, 750, function () {
       this.remove();
       that.socket.emit("SHOT", {col: col, row: row});
     });
-
-    // this.socket.emit("SHOT", {col: col, row: row});
   }
 };
 
