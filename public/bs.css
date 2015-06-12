@@ -1,5 +1,6 @@
 #wrapper {
-
+	margin: 0 auto;
+	width: 80%;
 }
 
 .red {
@@ -36,7 +37,6 @@
 .available-ship {
   height: 20px;
   margin: 10px;
-
   width: 100px;
 }
 
@@ -44,7 +44,6 @@
   background-color: rgba(0,0,0,0.2);
   cursor: pointer;
 }
-
 
 .tile.highlight:hover, .highlight {
   background-color: rgba(246,255,105,.6);
@@ -130,4 +129,16 @@ ul {
 
 .miss {
   background: white;
+}
+
+.left-bar {
+	margin: 100px 20px 0 20px;
+	height: 300px;
+	width: 200px;
+	float: left;
+}
+
+.waiting-room {
+	border: 1px solid black;
+	height: 100%;
 }

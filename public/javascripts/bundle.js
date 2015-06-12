@@ -124,18 +124,18 @@ window.BattleshipUI = BattleshipUI = function ($root, bs, socket) {
   this.grids = this.createGrids();
   this.render();
   this.socket = socket;
-
 	
   socket.on('CHANGE_STATE', this.changeState.bind(this));
   socket.on('SHOT', this.checkShot.bind(this));
   socket.on('RESPONSE', this.renderResponse.bind(this));
   socket.on('MESSAGE', this.displayMessage.bind(this));
+	socket.on('WAITING_ROOM', this.renderWaitingRoom.bind(this));
 
   this.boom = new Audio('./resources/bomb.wav');
   this.splash = new Audio('./resources/splash.wav');
+	
   $('.myShips .tile').on('click', this.handlePlace.bind(this));
   $('.myShots .tile').on('click', this.handleShot.bind(this));
-
   $('.message-form').on('submit', this.sendMessage.bind(this));
 };
 
@@ -144,7 +144,33 @@ BattleshipUI.prototype.displayMessage = function (data) {
   var $li = $("<li>").html(data.id + " said: " + data.message);
 
   $("ul").append($li);
-}
+};
+
+BattleshipUI.prototype.renderWaitingRoom = function (data) {	
+	var $target = $("ul.games");
+	$target.empty();
+	var socket = this.socket;
+	
+	var $playAI = $("<li><button id='AI'>play computer</button></li>");
+	$target.append($playAI);
+	
+	$playAI.on('click', function () {
+		socket.emit("COMPUTER_GAME", { id: socket.id } );
+	});
+	
+	data.sockets.forEach(function (id) {
+		if (id === socket.id) return;
+		
+		var $button = $("<li><button>" + id + "</button></li>");
+		
+		$button.on("click", function () {
+			socket.emit("PLAYER_GAME", { id: id });
+			$button.remove();
+		});
+		
+		$target.append($button);
+	});
+};
 
 BattleshipUI.prototype.sendMessage = function (event) {
 	event.preventDefault();
@@ -154,9 +180,7 @@ BattleshipUI.prototype.sendMessage = function (event) {
 };
 
 BattleshipUI.prototype.checkShot = function (data) {
-
   var result = this.bs.checkShot(data);
-  console.log(result);
   var row = data.row;
   var col = data.col;
   var tile = this.grids[0][row][col];
@@ -169,7 +193,6 @@ BattleshipUI.prototype.checkShot = function (data) {
     this.shakeBoard($(".myShips"));
 
     if (result.gameOver) {
-			console.log("client side over")
       this.socket.emit("GAME_OVER", { winner: "me" });
     }
   } else {
@@ -214,21 +237,8 @@ BattleshipUI.prototype.renderResponse = function (data) {
 };
 
 BattleshipUI.prototype.changeState = function (data) {
-  console.log(data.state);
   $(".status").html(data.state);
-	var socket = this.socket;
-
-	if (data.state === "WAITING_FOR_OPPONENT") {
-		var $playAI = $("<button id='AI'>play computer</button>");
-		$(".status").append($playAI);
-		
-		$playAI.on('click', function () {
-			console.log("ai game");
-
-			socket.emit("PLAY_COMPUTER", {});
-		});
-	}
-	
+	var socket = this.socket;	
   this.bs.state = data.state;
 };
 
