@@ -26,7 +26,7 @@ BattleshipUI.prototype.displayMessage = function (data) {
   console.log(data.id + " said: " + data.message);
   var $li = $("<li>").html(data.id + " said: " + data.message);
 
-  $("ul").append($li);
+  $("ul.message-list").append($li);
 };
 
 BattleshipUI.prototype.renderWaitingRoom = function (data) {	
