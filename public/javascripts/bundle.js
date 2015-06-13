@@ -130,6 +130,9 @@ window.BattleshipUI = BattleshipUI = function ($root, bs, socket) {
   socket.on('RESPONSE', this.renderResponse.bind(this));
   socket.on('MESSAGE', this.displayMessage.bind(this));
 	socket.on('WAITING_ROOM', this.renderWaitingRoom.bind(this));
+	socket.on('LOG_SHIPS', function (data) {
+		console.log(data.ships);
+	});
 
   this.boom = new Audio('./resources/bomb.wav');
   this.splash = new Audio('./resources/splash.wav');
