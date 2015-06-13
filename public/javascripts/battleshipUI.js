@@ -13,9 +13,6 @@ window.BattleshipUI = BattleshipUI = function ($root, bs, socket) {
   socket.on('RESPONSE', this.renderResponse.bind(this));
   socket.on('MESSAGE', this.displayMessage.bind(this));
 	socket.on('WAITING_ROOM', this.renderWaitingRoom.bind(this));
-	socket.on('LOG_SHIPS', function (data) {
-		console.log(data.ships);
-	});
 
   this.boom = new Audio('./resources/bomb.wav');
   this.splash = new Audio('./resources/splash.wav');
@@ -106,7 +103,6 @@ BattleshipUI.prototype.shakeBoard = function (board) {
 };
 
 BattleshipUI.prototype.renderResponse = function (data) {
-
   var row = data.row;
   var col = data.col;
 
@@ -236,11 +232,13 @@ BattleshipUI.prototype.placePreview = function (e) {
 
 BattleshipUI.prototype.handleShot = function (e) {
   if (this.bs.state === "SHOOT" && $(e.target).hasClass('untouched')) {
-    var $bomb = $('<div class="bomb"></div>');
     var row = $(e.target).data('row');
     var col = $(e.target).data('col');
-    var that = this;
-
+		
+		this.bs.state = "WAIT";
+    var $bomb = $('<div class="bomb"></div>');
+    var socket = this.socket;
+		
     $(e.target).append($bomb);
     $bomb.animate({
       width: 0,
@@ -248,30 +246,28 @@ BattleshipUI.prototype.handleShot = function (e) {
       left: "10px",
       top: "10px"
     }, 750, function () {
+	    socket.emit("SHOT", {col: col, row: row});
       this.remove();
-      that.socket.emit("SHOT", {col: col, row: row});
     });
   }
 };
 
 window.coordsBetween = function  (a, b) {
   var result = [];
-  var length;
-  var min;
+  var len, min;
 
   if (a[0] === b[0]) {
-
-    length = Math.abs(a[1] - b[1]);
+    len = Math.abs(a[1] - b[1]);
     min = Math.min(a[1], b[1]);
 
-    for (var i = min; i <= length + min; i++) {
+    for (var i = min; i <= len + min; i++) {
       result.push([a[0], i]);
     }
   } else if (a[1] === b[1]){
-    length = Math.abs(a[0] - b[0]);
+    len = Math.abs(a[0] - b[0]);
     min = Math.min(a[0], b[0]);
 
-    for (var i = min; i <= length + min; i++) {
+    for (var i = min; i <= len + min; i++) {
       result.push([i, a[1]]);
     }
   }
