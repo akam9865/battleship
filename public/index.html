@@ -7,6 +7,16 @@
   </head>
 
   <body>
+		<div class="overlay">
+		</div>
+		<div class="modal">
+			<h3>Welcome to Battleship</h3>
+			<form class="name-fleet-form">
+				<label>Name your fleet <input name='fleet-name' type="text" placeholder="Fleet Name"></input></label>
+				<input type="submit" value="Create Fleet">
+			</form>
+		</div>
+		
     <div id=wrapper>
 			<div class="left-bar">
 				<h3>Waiting Room</h3>
@@ -51,6 +61,7 @@
       var bs = new Battleship();
       var socket = io();
       var battleshipUI = new BattleshipUI($('.boards'), bs, socket);
+			$("input[name=fleet-name]").focus();
     </script>
   </body>
 </html>

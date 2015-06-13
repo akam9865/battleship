@@ -20,13 +20,22 @@ window.BattleshipUI = BattleshipUI = function ($root, bs, socket) {
   $('.myShips .tile').on('click', this.handlePlace.bind(this));
   $('.myShots .tile').on('click', this.handleShot.bind(this));
   $('.message-form').on('submit', this.sendMessage.bind(this));
+	$('.name-fleet-form').on('submit', this.nameFleet.bind(this));
 };
 
 BattleshipUI.prototype.displayMessage = function (data) {
-  console.log(data.id + " said: " + data.message);
-  var $li = $("<li>").html(data.id + " said: " + data.message);
-
+  var $li = $("<li>").html(data.username + ": " + data.message);
   $("ul.message-list").append($li);
+};
+
+BattleshipUI.prototype.nameFleet = function (event) {
+	event.preventDefault();
+	var fleetName = $('input:text[name=fleet-name]').val() || "anon";
+	
+	$('.modal').remove();
+	$('.overlay').remove();
+	
+	this.socket.emit("NAME_FLEET", { fleetName: fleetName });
 };
 
 BattleshipUI.prototype.renderWaitingRoom = function (data) {	
@@ -34,24 +43,25 @@ BattleshipUI.prototype.renderWaitingRoom = function (data) {
 	$target.empty();
 	var socket = this.socket;
 	
-	var $playAI = $("<li><button id='AI'>play computer</button></li>");
+
+	var $playAI = $("<li class='waiting-room-item'><span class='username'>Ava (AI)</span><button class='start-game' id='AI'>Start Battle</button></li>");
 	$target.append($playAI);
 	
 	$playAI.on('click', function () {
 		socket.emit("COMPUTER_GAME", { id: socket.id } );
 	});
-	
+			
 	data.sockets.forEach(function (id) {
-		if (id === socket.id) return;
+		if (id !== socket.id) {
+			var $button = $("<li class='waiting-room-item'><span class='username'>" + data.usernames[id] + "</span><button class='start-game'>Start Battle</button></li>");
+
+			$button.on("click", function () {
+				socket.emit("PLAYER_GAME", { id: id });
+				$button.remove();
+			});
 		
-		var $button = $("<li><button>" + id + "</button></li>");
-		
-		$button.on("click", function () {
-			socket.emit("PLAYER_GAME", { id: id });
-			$button.remove();
-		});
-		
-		$target.append($button);
+			$target.append($button);
+		}
 	});
 };
 
@@ -59,7 +69,7 @@ BattleshipUI.prototype.sendMessage = function (event) {
 	event.preventDefault();
   var message = $("#message").val();
   $("#message").val("");
-  this.socket.emit("MESSAGE", {message: message, id: this.socket.id});
+  this.socket.emit("MESSAGE", { message: message, id: this.socket.id });
 };
 
 BattleshipUI.prototype.checkShot = function (data) {
@@ -120,8 +130,12 @@ BattleshipUI.prototype.renderResponse = function (data) {
 
 BattleshipUI.prototype.changeState = function (data) {
   $(".status").html(data.state);
-	var socket = this.socket;	
   this.bs.state = data.state;
+	
+	// switch (data.state) {
+	// 	case "PLACE_SHIPS":
+	//
+	// }
 };
 
 BattleshipUI.prototype.createGrids = function () {
@@ -167,7 +181,7 @@ BattleshipUI.prototype.render = function () {
 };
 
 BattleshipUI.prototype.renderAvailable = function() {
-  var $avail = $('.available')
+  var $avail = $('.available');
   $avail.empty();
   this.bs.shipsToPlace.forEach(function(length) {
     var $ship = $("<div class='available-ship'></div>");
@@ -176,7 +190,7 @@ BattleshipUI.prototype.renderAvailable = function() {
     }
     $avail.append($ship);
   });
-}
+};
 
 BattleshipUI.prototype.handlePlace = function (e) {
   if (this.bs.state === "PLACE_SHIPS") {
@@ -226,9 +240,9 @@ BattleshipUI.prototype.placePreview = function (e) {
   if (this.bs.shipsToPlace.indexOf(highlights.length) > -1 && this.bs.notTaken(highlights)) {
     highlights.forEach(function (highlight) {
       $(grid[highlight[0]][highlight[1]]).addClass('highlight');
-    })
+    });
   }
-}
+};
 
 BattleshipUI.prototype.handleShot = function (e) {
   if (this.bs.state === "SHOOT" && $(e.target).hasClass('untouched')) {
