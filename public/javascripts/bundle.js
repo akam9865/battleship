@@ -6,16 +6,6 @@ window.Battleship = Battleship = function () {
   this.state = "WAITING_FOR_OPPONENT";
 };
 
-// Battleship.prototype.createShips = function () {
-//   var ships = [2, 3, 3, 4, 5];
-//
-//   for (var i = 0; i < 5; i++) {
-//     ships[i] = new Ship({ length: ships[i] });
-//   };
-//
-//   return ships;
-// };
-
 Battleship.prototype.notTaken = function (segments) {
   var conflict = false;
 	
@@ -441,4 +431,4 @@ Ship.prototype.checkSunk = function () {
   return sunk;
 };
 
-},{}]},{},[1,2,3,4]);
+},{}]},{},[1,2,4,3]);
