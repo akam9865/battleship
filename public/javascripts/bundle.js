@@ -124,6 +124,7 @@ window.BattleshipUI = BattleshipUI = function ($root, bs, socket) {
   this.boom = new Audio('./resources/bomb.wav');
   this.splash = new Audio('./resources/splash.wav');
 	
+	$('.games-computer').on('click', 'button', this.startComputerGame.bind(this));
   $('.myShips .tile').on('click', this.handlePlace.bind(this));
   $('.myShots .tile').on('click', this.handleShot.bind(this));
   $('.message-form').on('submit', this.sendMessage.bind(this));
@@ -145,18 +146,23 @@ BattleshipUI.prototype.nameFleet = function (event) {
 	this.socket.emit("NAME_FLEET", { fleetName: fleetName });
 };
 
+BattleshipUI.prototype.startComputerGame = function (ev) {
+	var aiLevel = $(ev.currentTarget).data('level');
+	var aiName = $(ev.currentTarget).data('name');
+	
+	this.socket.emit("COMPUTER_GAME", { id: socket.id, level: aiLevel, name: aiName });
+};
+
 BattleshipUI.prototype.renderWaitingRoom = function (data) {	
 	var $target = $("ul.games");
 	$target.empty();
 	var socket = this.socket;
 	
-
-	var $playAI = $("<li class='waiting-room-item'><span class='username'>Ava (AI)</span><button class='start-game' id='AI'>Start Battle</button></li>");
-	$target.append($playAI);
-	
-	$playAI.on('click', function () {
-		socket.emit("COMPUTER_GAME", { id: socket.id } );
-	});
+	// var $playAI = $("<li class='waiting-room-item'><span class='username'>Ava (AI)</span><button class='start-game' id='AI'>Start Battle</button></li>");
+	// $target.append($playAI);
+	// $playAI.on('click', function () {
+	// 	socket.emit("COMPUTER_GAME", { id: socket.id } );
+	// });
 			
 	data.sockets.forEach(function (id) {
 		if (id !== socket.id) {

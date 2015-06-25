@@ -133,8 +133,8 @@ ul {
 
 .left-bar {
 	margin: 100px 20px 0 20px;
-	height: 300px;
-	width: 200px;
+	height: 400px;
+	width: 300px;
 	float: left;
 }
 
@@ -143,7 +143,6 @@ ul {
 	height: 100%;
 	padding: 3px;
 }
-
 
 .overlay {
   position: fixed; 
@@ -155,7 +154,6 @@ ul {
   opacity: 0.7;
 	z-index: 10;
 }
-
 
 .modal {
   position:absolute;
